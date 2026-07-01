@@ -1,4 +1,57 @@
+# Virtual environments
 venv/
+.venv/
+env/
+
+# Python cache
 __pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
 .env
+.env.*
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Build files
+build/
+dist/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Vector databases and indexes
 vectorstore/
+faiss_index/
+*.faiss
+*.index
+*.pkl
+
+# Uploaded documents
+data/raw_docs/
+data/uploads/
+
+# Model files
+models/
+*.gguf
+*.bin
+*.safetensors
+
+# Testing
+.pytest_cache/
+.coverage
+
+# Temporary files
+tmp/
+temp/
