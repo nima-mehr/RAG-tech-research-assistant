@@ -1,57 +1,111 @@
-# Virtual environments
-venv/
-.venv/
-env/
-
-# Python cache
+```gitignore
+# ========================================
+# Python
+# ========================================
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyo
+*.pyd
 
-# Environment variables
+# ========================================
+# Virtual Environments
+# ========================================
+venv/
+.venv/
+env/
+ENV/
+
+# ========================================
+# Environment Variables
+# ========================================
 .env
 .env.*
+!.env.example
 
+# ========================================
 # IDEs
+# ========================================
 .vscode/
 .idea/
 
-# OS files
+# ========================================
+# OS Files
+# ========================================
 .DS_Store
 Thumbs.db
+desktop.ini
 
+# ========================================
 # Logs
+# ========================================
 *.log
 
-# Build files
+# ========================================
+# Build / Distribution
+# ========================================
 build/
 dist/
 *.egg-info/
+.eggs/
 
+# ========================================
 # Jupyter
+# ========================================
 .ipynb_checkpoints/
 
-# Vector databases and indexes
+# ========================================
+# Testing
+# ========================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ========================================
+# Vector Databases / Embeddings
+# (generated locally)
+# ========================================
 vectorstore/
-faiss_index/
 *.faiss
 *.index
+*.ann
 *.pkl
+*.pickle
 
-# Uploaded documents
-data/raw_docs/
-data/uploads/
+# ========================================
+# Uploaded Documents
+# Ignore user-provided documents but keep
+# the directory in Git using a .gitkeep file
+# ========================================
+data/raw_docs/*
+!data/raw_docs/.gitkeep
 
-# Model files
+# ========================================
+# Temporary Files
+# ========================================
+tmp/
+temp/
+
+# ========================================
+# Local SQLite databases
+# ========================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ========================================
+# Model Files (if used locally)
+# ========================================
 models/
 *.gguf
 *.bin
 *.safetensors
 
-# Testing
-.pytest_cache/
-.coverage
-
-# Temporary files
-tmp/
-temp/
+# ========================================
+# Misc
+# ========================================
+.cache/
+```
