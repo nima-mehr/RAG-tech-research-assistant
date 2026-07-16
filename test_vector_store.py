@@ -9,8 +9,11 @@ text = load_pdf("pdfs/sample.pdf")
 
 
 # Split text
-chunks = chunk_text(text)
-
+chunks = chunk_text(
+    text,
+    chunk_size=200,
+    overlap=40
+)
 
 # Create embeddings
 embedding_model = EmbeddingModel()
