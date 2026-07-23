@@ -175,9 +175,11 @@ if st.session_state.processed:
 
             elapsed = time.time() - start
 
-            st.subheader("🤖 Answer")
+            with st.container(border=True):
 
-            st.info(result["answer"])
+                st.subheader("🤖 Answer")
+
+                st.write(result["answer"])
 
             st.caption(
                 f"⏱ Response time: {elapsed:.2f} seconds"
