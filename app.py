@@ -42,13 +42,6 @@ st.caption(
     "A Retrieval-Augmented Generation (RAG) application for answering questions from PDF documents."
 )
 
-st.markdown("""
-This application allows users to upload PDF documents and ask natural language
-questions. It uses Retrieval-Augmented Generation (RAG) to retrieve relevant
-information from the document before generating an answer with a local LLM.
-""")
-
-
 # --------------------------------------------------
 # Sidebar
 # --------------------------------------------------
