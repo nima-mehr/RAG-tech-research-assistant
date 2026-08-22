@@ -1,11 +1,13 @@
 from pypdf import PdfReader
 
-def load_pdf(file_path):
-    reader = PdfReader(file_path)
 
-    text = ""
+def load_pdf(file_path: str) -> str:
+    reader = PdfReader(file_path)
+    pages = []
 
     for page in reader.pages:
-        text += page.extract_text() + "\n"
+        extracted = page.extract_text() or ""
+        if extracted.strip():
+            pages.append(extracted.strip())
 
-    return text
+    return "\n\n".join(pages)

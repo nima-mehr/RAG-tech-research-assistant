@@ -1,117 +1,21 @@
-```gitignore
-# ========================================
-# Python
-# ========================================
 __pycache__/
 *.py[cod]
-*$py.class
-*.pyo
-*.pyd
-
-# ========================================
-# Virtual Environments
-# ========================================
-venv/
 .venv/
+venv/
 env/
-ENV/
-
-# ========================================
-# Environment Variables
-# ========================================
 .env
-.env.*
-!.env.example
-
-# ========================================
-# IDEs
-# ========================================
-.vscode/
 .idea/
-
-# ========================================
-# OS Files
-# ========================================
+.vscode/
 .DS_Store
-Thumbs.db
-desktop.ini
-
-# ========================================
-# Logs
-# ========================================
 *.log
-
-# ========================================
-# Build / Distribution
-# ========================================
-build/
-dist/
-*.egg-info/
-.eggs/
-
-# ========================================
-# Jupyter
-# ========================================
-.ipynb_checkpoints/
-
-# ========================================
-# Testing
-# ========================================
 .pytest_cache/
-.coverage
-.coverage.*
-htmlcov/
 .mypy_cache/
 .ruff_cache/
-
-# ========================================
-# Vector Databases / Embeddings
-# (generated locally)
-# ========================================
-vectorstore/
-*.faiss
-*.index
-*.ann
-*.pkl
-*.pickle
-
-# ========================================
-# Uploaded Documents
-# Ignore user-provided documents but keep
-# the directory in Git using a .gitkeep file
-# ========================================
-data/raw_docs/*
-!data/raw_docs/.gitkeep
-
-# ========================================
-# PDF Documents
-# Ignore locally stored PDFs
-# ========================================
-pdfs/
-
-# ========================================
-# Temporary Files
-# ========================================
-tmp/
-temp/
-
-# ========================================
-# Local SQLite databases
-# ========================================
-*.db
-*.sqlite
-*.sqlite3
-
-# ========================================
-# Model Files (if used locally)
-# ========================================
-models/
-*.gguf
-*.bin
-*.safetensors
-
-# ========================================
-# Misc
-# ========================================
 .cache/
-```
+
+# Runtime data
+database/*
+!database/.gitkeep
+pdfs/*
+!pdfs/.gitkeep
+!pdfs/sample.pdf
