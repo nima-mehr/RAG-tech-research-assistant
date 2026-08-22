@@ -2,16 +2,17 @@
 
 Local retrieval-augmented generation (RAG) app for asking questions about PDF documents.
 
-The pipeline extracts text, chunks it, embeds the chunks, stores them in ChromaDB, retrieves relevant context, and answers with a local Ollama model.
+The pipeline extracts text page by page, chunks it, embeds the chunks, stores them in ChromaDB, retrieves relevant context, and answers with a local Ollama model.
 
 ## Features
 
-- PDF text extraction
+- Single large books or multiple PDFs in one library
+- Page-aware extraction and citations
 - Recursive text chunking
-- Sentence Transformer embeddings
-- Persistent ChromaDB storage
+- Batched Sentence Transformer embeddings
+- Persistent ChromaDB storage (add / replace / remove by file)
 - Local LLM answers via Ollama
-- Streamlit UI for upload, processing, and Q&A
+- Streamlit UI for upload, library management, and Q&A
 - Settings via environment variables
 
 ## Project structure
@@ -57,7 +58,9 @@ Default Ollama URL is `http://127.0.0.1:11434`. Override it in `.env` if needed.
 streamlit run app.py
 ```
 
-Upload a PDF, process it, then ask questions. Answers are restricted to retrieved document context.
+Upload one or more PDFs, process them, then ask questions. Re-processing the same filename replaces only that file. Check **Replace entire library** to wipe the index first.
+
+A 400-page text PDF is supported: pages are extracted individually, chunked with page metadata, and embedded in batches. Expect a few minutes on CPU depending on length. Scanned image-only PDFs need OCR (not included yet).
 
 ## Tests
 
@@ -76,11 +79,13 @@ See `.env.example` for:
 - `EMBEDDING_MODEL`
 - `CHUNK_SIZE` / `CHUNK_OVERLAP`
 - `TOP_K`
+- `CHROMA_PATH` / `COLLECTION_NAME`
+- `UPLOAD_DIR`
 
 ## Next development steps
 
-- Multi-document collections without replacing the current index
+- OCR for scanned books
 - Chat history / multi-turn context
-- Page-level citations
 - Retrieval reranking
+- Background / progress for very large ingest
 - Docker / deployment config

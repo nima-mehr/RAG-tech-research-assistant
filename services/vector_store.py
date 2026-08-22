@@ -31,13 +31,28 @@ class VectorStore:
         self.collection.add(**payload)
         return len(chunks)
 
-    def search(self, query_embedding, results: int = 3) -> dict:
+    def search(self, query_embedding, results: int = 3, where: dict | None = None) -> dict:
         vector = query_embedding.tolist() if hasattr(query_embedding, "tolist") else query_embedding
-        return self.collection.query(
-            query_embeddings=[vector],
-            n_results=results,
-            include=["documents", "metadatas", "distances"],
-        )
+        kwargs = {
+            "query_embeddings": [vector],
+            "n_results": max(1, results),
+            "include": ["documents", "metadatas", "distances"],
+        }
+        if where:
+            kwargs["where"] = where
+        return self.collection.query(**kwargs)
+
+    def delete_by_source(self, source: str) -> None:
+        self.collection.delete(where={"source": source})
+
+    def list_sources(self) -> dict[str, int]:
+        data = self.collection.get(include=["metadatas"])
+        counts: dict[str, int] = {}
+        for meta in data.get("metadatas") or []:
+            name = (meta or {}).get("source")
+            if name:
+                counts[name] = counts.get(name, 0) + 1
+        return dict(sorted(counts.items()))
 
     def count(self) -> int:
         return self.collection.count()
