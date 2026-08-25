@@ -2,14 +2,16 @@
 
 Local retrieval-augmented generation (RAG) app for asking questions about PDF documents.
 
-The pipeline extracts text page by page, chunks it, embeds the chunks, stores them in ChromaDB, retrieves relevant context, and answers with a local Ollama model.
+The pipeline extracts text page by page, chunks it, embeds the chunks in batches, stores them in ChromaDB, retrieves relevant context, and answers with a local Ollama model.
 
 ## Features
 
 - Single large books or multiple PDFs in one library
 - Page-aware extraction and citations
+- Progress feedback while indexing large files
+- Batched embeddings (resilient multi-file ingest)
+- Clear errors for scanned / image-only PDFs
 - Recursive text chunking
-- Batched Sentence Transformer embeddings
 - Persistent ChromaDB storage (add / replace / remove by file)
 - Local LLM answers via Ollama
 - Streamlit UI for upload, library management, and Q&A
@@ -60,7 +62,7 @@ streamlit run app.py
 
 Upload one or more PDFs, process them, then ask questions. Re-processing the same filename replaces only that file. Check **Replace entire library** to wipe the index first.
 
-A 400-page text PDF is supported: pages are extracted individually, chunked with page metadata, and embedded in batches. Expect a few minutes on CPU depending on length. Scanned image-only PDFs need OCR (not included yet).
+Large text PDFs are supported: pages are extracted individually, chunked with page metadata, and embedded in configurable batches with a live progress bar. If one file in a multi-upload fails (e.g. scanned PDF), earlier successful files stay in the library. Scanned image-only PDFs need OCR first (not included yet).
 
 ## Tests
 
@@ -79,13 +81,13 @@ See `.env.example` for:
 - `EMBEDDING_MODEL`
 - `CHUNK_SIZE` / `CHUNK_OVERLAP`
 - `TOP_K`
+- `EMBED_BATCH_SIZE`
 - `CHROMA_PATH` / `COLLECTION_NAME`
 - `UPLOAD_DIR`
 
 ## Next development steps
 
-- OCR for scanned books
 - Chat history / multi-turn context
 - Retrieval reranking
-- Background / progress for very large ingest
+- OCR for scanned books
 - Docker / deployment config

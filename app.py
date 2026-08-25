@@ -38,7 +38,7 @@ with st.sidebar:
         "Upload PDFs",
         type=["pdf"],
         accept_multiple_files=True,
-        help="Add a 400-page book or several papers. Text-based PDFs work best.",
+        help="Large text PDFs and multiple files are supported. Scanned image-only PDFs need OCR first.",
     )
     replace_library = st.checkbox("Replace entire library", value=False)
 
@@ -54,15 +54,44 @@ with st.sidebar:
 
         if st.button("Process documents", type="primary", use_container_width=True):
             started = time.time()
+            progress = st.progress(0.0)
+            status = st.empty()
+
+            def on_progress(info: dict) -> None:
+                message = info.get("message") or ""
+                status.caption(message)
+                fraction = info.get("fraction")
+                if fraction is not None:
+                    progress.progress(min(1.0, max(0.0, float(fraction))))
+
             try:
-                with st.spinner("Extracting pages and creating embeddings..."):
-                    chunks = engine.process_pdfs(saved_paths, replace=replace_library)
+                result = engine.process_pdfs(
+                    saved_paths,
+                    replace=replace_library,
+                    on_progress=on_progress,
+                )
             except Exception as exc:
+                progress.progress(0.0)
+                status.empty()
                 st.error(str(exc))
             else:
-                st.session_state.last_added = chunks
-                st.success(f"Indexed {chunks} chunks from {len(saved_paths)} file(s).")
-                st.caption(f"Processing time: {time.time() - started:.2f}s")
+                progress.progress(1.0)
+                elapsed = time.time() - started
+                st.session_state.last_added = result["chunks"]
+
+                if result["files_ok"]:
+                    st.success(
+                        f"Indexed {result['chunks']} chunks from "
+                        f"{len(result['files_ok'])} file(s)."
+                    )
+                if result["errors"]:
+                    for item in result["errors"]:
+                        st.error(f"**{item['file']}:** {item['error']}")
+                if not result["files_ok"] and not result["errors"]:
+                    st.warning("Nothing was indexed.")
+
+                status.caption(f"Finished in {elapsed:.1f}s")
+                time.sleep(0.4)
                 st.rerun()
 
     st.divider()
