@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from services.chunker import chunk_pages, chunk_text
-from services.pdf_loader import load_pdf, load_pdf_pages
+from services.pdf_loader import load_pdf, load_pdf_document, load_pdf_pages
 
 
 SAMPLE_PDF = Path("pdfs/sample.pdf")
@@ -10,6 +10,15 @@ SAMPLE_PDF = Path("pdfs/sample.pdf")
 def test_load_sample_pdf():
     text = load_pdf(str(SAMPLE_PDF))
     assert "WireGuard" in text or "VPN" in text or len(text) > 20
+
+
+def test_load_pdf_document_stats():
+    document = load_pdf_document(str(SAMPLE_PDF))
+    assert document["source"] == "sample.pdf"
+    assert document["total_pages"] >= 1
+    assert document["text_pages"] >= 1
+    assert document["text_pages"] <= document["total_pages"]
+    assert len(document["pages"]) == document["text_pages"]
 
 
 def test_load_pdf_pages_have_metadata():
