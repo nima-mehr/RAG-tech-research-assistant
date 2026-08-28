@@ -2,7 +2,7 @@
 
 Local retrieval-augmented generation (RAG) app for asking questions about PDF documents.
 
-The pipeline extracts text page by page, chunks it, embeds the chunks in batches, stores them in ChromaDB, retrieves relevant context, and answers with a local Ollama model.
+The pipeline extracts text page by page, chunks it, embeds the chunks in batches, stores them in ChromaDB, retrieves a wide candidate set, reranks it with a cross-encoder, and answers with a local Ollama model.
 
 ## Features
 
@@ -13,6 +13,9 @@ The pipeline extracts text page by page, chunks it, embeds the chunks in batches
 - Clear errors for scanned / image-only PDFs
 - Recursive text chunking
 - Persistent ChromaDB storage (add / replace / remove by file)
+- Candidate over-retrieval + cross-encoder reranking
+- Optional MMR so near-duplicate pages do not crowd the context
+- Light lexical overlap bonus for exact terms
 - Local LLM answers via Ollama
 - Streamlit UI for upload, library management, and Q&A
 - Settings via environment variables
@@ -27,6 +30,8 @@ The pipeline extracts text page by page, chunks it, embeds the chunks in batches
 │   ├── chunker.py
 │   ├── embeddings.py
 │   ├── vector_store.py
+│   ├── reranker.py
+│   ├── retriever.py
 │   └── rag_engine.py
 ├── tests/
 │   └── test_pipeline.py
@@ -70,7 +75,7 @@ Large text PDFs are supported: pages are extracted individually, chunked with pa
 python -m pytest tests/test_pipeline.py
 ```
 
-These cover PDF loading and chunking without requiring Ollama.
+These cover PDF loading, chunking, and retrieval scoring without requiring Ollama. The cross-encoder is not downloaded in tests.
 
 ## Configuration
 
@@ -80,7 +85,9 @@ See `.env.example` for:
 - `OLLAMA_MODEL`
 - `EMBEDDING_MODEL`
 - `CHUNK_SIZE` / `CHUNK_OVERLAP`
-- `TOP_K`
+- `TOP_K` / `CANDIDATE_K`
+- `RERANK_MODEL` / `ENABLE_RERANK`
+- `ENABLE_MMR` / `MMR_LAMBDA`
 - `EMBED_BATCH_SIZE`
 - `CHROMA_PATH` / `COLLECTION_NAME`
 - `UPLOAD_DIR`
@@ -88,6 +95,5 @@ See `.env.example` for:
 ## Next development steps
 
 - Chat history / multi-turn context
-- Retrieval reranking
 - OCR for scanned books
 - Docker / deployment config

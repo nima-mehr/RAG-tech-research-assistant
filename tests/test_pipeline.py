@@ -2,6 +2,7 @@ from pathlib import Path
 
 from services.chunker import chunk_pages, chunk_text
 from services.pdf_loader import load_pdf, load_pdf_document, load_pdf_pages
+from services.retriever import combine_scores, hybrid_bonus, mmr_select, parse_chroma_results
 
 
 SAMPLE_PDF = Path("pdfs/sample.pdf")
@@ -50,3 +51,49 @@ def test_chunk_pages_keeps_page_numbers():
     assert records
     assert {record["page"] for record in records} == {1, 2}
     assert all(record["source"] == "book.pdf" for record in records)
+
+
+def test_parse_chroma_results():
+    raw = {
+        "documents": [["alpha passage", "beta passage"]],
+        "metadatas": [[{"source": "a.pdf", "page": 1, "chunk": 0}, {"source": "b.pdf", "page": 2, "chunk": 1}]],
+        "distances": [[0.2, 0.8]],
+        "embeddings": [[[1.0, 0.0], [0.0, 1.0]]],
+    }
+    hits = parse_chroma_results(raw)
+    assert len(hits) == 2
+    assert hits[0]["source"] == "a.pdf"
+    assert hits[0]["distance"] == 0.2
+
+
+def test_hybrid_bonus_rewards_term_overlap():
+    query = "wireguard vpn handshake"
+    relevant = "WireGuard uses a handshake to establish a VPN tunnel."
+    unrelated = "The bakery opens at dawn and sells bread."
+    assert hybrid_bonus(query, relevant) > hybrid_bonus(query, unrelated)
+
+
+def test_combine_scores_prefers_rerank():
+    hits = [
+        {"text": "weak match but close vector", "distance": 0.1},
+        {"text": "strong semantic answer about wireguard", "distance": 0.9},
+    ]
+    ranked = combine_scores(
+        hits,
+        rerank_scores=[0.1, 0.9],
+        query="wireguard",
+    )
+    assert "wireguard" in ranked[0]["text"]
+    assert ranked[0]["rerank_score"] == 0.9
+
+
+def test_mmr_select_avoids_near_duplicates():
+    hits = [
+        {"text": "a", "score": 1.0, "embedding": [1.0, 0.0]},
+        {"text": "a-copy", "score": 0.95, "embedding": [0.99, 0.01]},
+        {"text": "different", "score": 0.7, "embedding": [0.0, 1.0]},
+    ]
+    selected = mmr_select(hits, top_k=2, lambda_mult=0.5)
+    texts = {item["text"] for item in selected}
+    assert "different" in texts
+    assert len(selected) == 2

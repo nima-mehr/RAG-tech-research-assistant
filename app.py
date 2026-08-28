@@ -146,6 +146,9 @@ if library:
                             heading += f" · page {page}"
                         if chunk is not None:
                             heading += f" · chunk {chunk}"
+                        score = source_hit.get("score")
+                        if score is not None:
+                            heading += f" · score {float(score):.3f}"
                         st.markdown(f"**{heading}**")
                         st.code(source_hit["text"], language=None)
 else:

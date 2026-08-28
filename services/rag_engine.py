@@ -4,9 +4,13 @@ from pathlib import Path
 import ollama
 
 from config import (
+    CANDIDATE_K,
     CHUNK_OVERLAP,
     CHUNK_SIZE,
     EMBED_BATCH_SIZE,
+    ENABLE_MMR,
+    ENABLE_RERANK,
+    MMR_LAMBDA,
     OLLAMA_HOST,
     OLLAMA_MODEL,
     TOP_K,
@@ -14,6 +18,8 @@ from config import (
 from services.chunker import chunk_pages
 from services.embeddings import EmbeddingModel
 from services.pdf_loader import load_pdf_document
+from services.reranker import Reranker
+from services.retriever import retrieve_hits
 from services.vector_store import VectorStore
 
 ProgressCallback = Callable[[dict], None]
@@ -28,14 +34,21 @@ class RAGEngine:
         chunk_overlap: int | None = None,
         top_k: int | None = None,
         embed_batch_size: int | None = None,
+        candidate_k: int | None = None,
+        enable_rerank: bool | None = None,
+        enable_mmr: bool | None = None,
     ):
         self.model = model or OLLAMA_MODEL
         self.client = ollama.Client(host=ollama_host or OLLAMA_HOST)
         self.chunk_size = chunk_size or CHUNK_SIZE
         self.chunk_overlap = chunk_overlap or CHUNK_OVERLAP
         self.top_k = top_k or TOP_K
+        self.candidate_k = candidate_k or CANDIDATE_K
         self.embed_batch_size = embed_batch_size or EMBED_BATCH_SIZE
+        self.enable_rerank = ENABLE_RERANK if enable_rerank is None else enable_rerank
+        self.enable_mmr = ENABLE_MMR if enable_mmr is None else enable_mmr
         self.embedding_model = EmbeddingModel()
+        self.reranker = Reranker() if self.enable_rerank else None
         self.db = VectorStore()
 
     def reset(self) -> None:
@@ -260,13 +273,19 @@ class RAGEngine:
             k = max(k, 6)
         k = min(k, library_size)
 
-        query_embedding = self.embedding_model.create_embeddings([question])[0]
-        where = {"source": source} if source else None
-        results = self.db.search(query_embedding, results=k, where=where)
-
-        documents = (results.get("documents") or [[]])[0]
-        metadatas = (results.get("metadatas") or [[]])[0]
-        if not documents:
+        hits = retrieve_hits(
+            db=self.db,
+            embedding_model=self.embedding_model,
+            question=question,
+            top_k=k,
+            candidate_k=max(self.candidate_k, k),
+            source=source,
+            reranker=self.reranker,
+            use_rerank=self.enable_rerank and self.reranker is not None,
+            use_mmr=self.enable_mmr,
+            mmr_lambda=MMR_LAMBDA,
+        )
+        if not hits:
             return {
                 "answer": "I don't know based on the provided documents.",
                 "sources": [],
@@ -274,21 +293,26 @@ class RAGEngine:
 
         context_blocks = []
         sources = []
-        for index, document in enumerate(documents):
-            meta = metadatas[index] if index < len(metadatas) else {}
-            label = meta.get("source") or "document"
-            page = meta.get("page")
+        for rank, hit in enumerate(hits, start=1):
+            label = hit.get("source") or "document"
+            page = hit.get("page")
             heading = f"[{label}"
             if page is not None:
                 heading += f", p. {page}"
+            heading += f", rank {rank}"
             heading += "]"
-            context_blocks.append(f"{heading}\n{document}")
+            context_blocks.append(f"{heading}\n{hit['text']}")
             sources.append(
                 {
-                    "text": document,
+                    "text": hit["text"],
                     "source": label,
                     "page": page,
-                    "chunk": meta.get("chunk"),
+                    "chunk": hit.get("chunk"),
+                    "score": hit.get("score"),
+                    "rerank_score": hit.get("rerank_score"),
+                    "vector_score": hit.get("vector_score"),
+                    "lexical_score": hit.get("lexical_score"),
+                    "distance": hit.get("distance"),
                 }
             )
 
