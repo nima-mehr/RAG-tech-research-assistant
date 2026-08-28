@@ -31,12 +31,21 @@ class VectorStore:
         self.collection.add(**payload)
         return len(chunks)
 
-    def search(self, query_embedding, results: int = 3, where: dict | None = None) -> dict:
+    def search(
+        self,
+        query_embedding,
+        results: int = 3,
+        where: dict | None = None,
+        include_embeddings: bool = False,
+    ) -> dict:
         vector = query_embedding.tolist() if hasattr(query_embedding, "tolist") else query_embedding
+        include = ["documents", "metadatas", "distances"]
+        if include_embeddings:
+            include.append("embeddings")
         kwargs = {
             "query_embeddings": [vector],
             "n_results": max(1, results),
-            "include": ["documents", "metadatas", "distances"],
+            "include": include,
         }
         if where:
             kwargs["where"] = where
